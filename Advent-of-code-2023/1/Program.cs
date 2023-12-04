@@ -1,6 +1,4 @@
-﻿using System.Text.RegularExpressions;
-
-string[] text = File.ReadAllLines(@"../../../input.txt");
+﻿string[] text = File.ReadAllLines(@"../../../input.txt");
 
 int sum = 0;
 
