@@ -22,7 +22,7 @@
             {
                 almanac.PushNewNode(nodeToAdd);
             }
-            else if(!string.IsNullOrEmpty(line)) // numbers
+            else if (!string.IsNullOrEmpty(line)) // numbers
             {
                 var numbers = line.Split(" ").Where(x => !string.IsNullOrEmpty(x)).Select(long.Parse).ToList();
                 nodeToAdd.Maps.Add(new AlmanacMap(numbers[1], numbers[0], numbers[2]));
@@ -55,7 +55,22 @@ public class Almanac
 
     public long GetLowestLocation()
     {
-        return Seeds.Select(Root.CalculateNext).OrderBy(x => x).First();
+        var minLocation = long.MaxValue;
+
+        for (int i = 0; i < Seeds.Count; i += 2)
+        {
+            var startSeed = Seeds[i];
+            var seedLength = Seeds[i + 1];
+
+            for (var j = startSeed; j < startSeed + seedLength; j++)
+            {
+                var result = Root.CalculateNext(j);
+                if (result < minLocation)
+                    minLocation = result;
+            }
+        }
+        return minLocation;
+        //return Seeds.Select(Root.CalculateNext).OrderBy(x => x).First();
     }
 }
 
