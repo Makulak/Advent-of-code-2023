@@ -38,7 +38,10 @@ public class CamelGame
 
     public int GetResult()
     {
-        var ordered = Hands.Order().ToList();
+        var test = Hands
+            .Order()
+            .Select((x, idx) => new { Rank = idx + 1, Hand = x })
+            .ToList();
         return Hands
             .Order()
             .Select((x, idx) => new { Rank = idx + 1, Hand = x })
@@ -49,34 +52,60 @@ public class CamelGame
 public class Hand : IComparable<Hand>
 {
     public string Cards { get; set; }
-    public List<int> CardValues { get; set; }
     public int BetValue { get; set; }
 
     public Hand(string cards, int betValue)
     {
         Cards = cards;
         BetValue = betValue;
+    }
 
-        CardValues = cards.Select(x =>
-        {
-            var map = new Dictionary<string, int>()
+    private List<int> GetCardValues()
+    {
+        return Cards.Select(GetCardValue).ToList();
+    }
+
+    private int GetCardValue(char card)
+    {
+        var map = new Dictionary<string, int>()
             {
                 { "T", 10 },
-                { "J", 11 },
+                { "J", 1 },
                 { "Q", 12 },
                 { "K", 13 },
                 { "A", 14 },
             };
-            if (int.TryParse(x.ToString(), out var num))
-                return num;
+        if (int.TryParse(card.ToString(), out var num))
+            return num;
 
-            return map[x.ToString()];
-        }).ToList();
+        return map[card.ToString()];
+    }
+
+    public string GetBestHandWithJockers()
+    {
+        if (!Cards.Contains("J") || Cards.All(x => x == 'J'))
+            return Cards;
+
+        var temp = new String(Cards
+            .Where(x => x != 'J')
+            .GroupBy(x => x)
+            .OrderByDescending(x => x.Count())
+            .ThenBy(x => GetCardValue(x.First()))
+            .First()
+            .Select(x => x)
+            .Take(1)
+            .ToArray());
+
+        var strongestPossibleHand = Cards.Replace("J", temp);
+
+        return strongestPossibleHand;
     }
 
     public HandType GetHandType()
     {
-        var groupped = Cards.GroupBy(x => x);
+        //var groupped = Cards.GroupBy(x => x);
+        var groupped = GetBestHandWithJockers().GroupBy(x => x);
+
         if (groupped.Count() == 1)
             return HandType.Five;
         else if (groupped.Any(x => x.Count() == 4))
@@ -103,9 +132,12 @@ public class Hand : IComparable<Hand>
 
         if (currentHandType == otherHandType)
         {
-            for (int i = 0; i < CardValues.Count(); i++)
+            var currentCardValues = GetCardValues();
+            var otherCardValues = other.GetCardValues();
+
+            for (int i = 0; i < currentCardValues.Count(); i++)
             {
-                var compareResult = CardValues[i].CompareTo(other.CardValues[i]);
+                var compareResult = currentCardValues[i].CompareTo(otherCardValues[i]);
 
                 if(compareResult != 0)
                     return compareResult;
@@ -114,5 +146,10 @@ public class Hand : IComparable<Hand>
         }
 
         return currentHandType.CompareTo(otherHandType);
+    }
+
+    public override string ToString()
+    {
+        return Cards;
     }
 }
