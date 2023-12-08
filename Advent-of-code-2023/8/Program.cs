@@ -24,24 +24,36 @@
         }
 
         var iterator = 0;
-        var currentNode = nodeList.Single(x => x.Name == "AAA");
+        var currentNodes = nodeList.Where(x => x.Name.EndsWith("A")).ToList();
+
+        var zIndexes = new List<(string, int)>();
 
         while (true)
         {
             var nextStep = directions[iterator % directions.Length];
-
-            if (nextStep == 'L')
-                currentNode = nodeList.Single(x => x.Name == currentNode.Left);
-            else
-                currentNode = nodeList.Single(x => x.Name == currentNode.Right);
-
             iterator++;
+            var nextNodes = new List<Node>();
 
-            if (currentNode.Name == "ZZZ")
-                break;
+            foreach (var node in currentNodes)
+            {
+                if (nextStep == 'L')
+                    nextNodes.Add(nodeList.Single(x => x.Name == node.Left));
+                else
+                    nextNodes.Add(nodeList.Single(x => x.Name == node.Right));
+            }
+            currentNodes = nextNodes;
+
+            if (currentNodes.Any(x => x.Name.EndsWith("Z")))
+                zIndexes.AddRange(currentNodes.Where(x => x.Name.EndsWith("Z")).Select(x => (x.Name, iterator)));
+
+            if (zIndexes.GroupBy(x => x.Item1).All(x => x.Count() > 1) && zIndexes.Count > 0)
+            {
+                var multiplliers = zIndexes.GroupBy(x => x.Item1).Select(x => (x.First().Item1, x.ToList()[1].Item2 / x.ToList()[0].Item2));
+                var firstZIndexes = zIndexes.GroupBy(x => x.Item1).Select(x => x.First().Item2);
+
+                // Calculate LCM on https://www.calculatorsoup.com/calculators/math/lcm.php (12083 13207 17141 18827 20513 22199) => 13,385,272,668,829
+            }
         }
-
-        Console.WriteLine(iterator);
     }
 }
 
@@ -50,4 +62,9 @@ public class Node
     public string Name { get; set; }
     public string Left { get; set; }
     public string Right { get; set; }
+
+    public override string ToString()
+    {
+        return $"{Name} => ({Left} - {Right})";
+    }
 }
