@@ -4,6 +4,7 @@ int sum = 0;
 foreach (string line in text)
 {
     var numbers = line.Split(' ').Select(int.Parse).ToList();
+    numbers.Reverse();
     var result = GetDiffFromSequence(numbers);
     sum += result.Last();
 }
