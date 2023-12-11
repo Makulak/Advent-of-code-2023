@@ -1,39 +1,58 @@
-﻿using System.Reflection.PortableExecutable;
-
-internal class Program
+﻿internal class Program
 {
     private static void Main(string[] args)
     {
+        var przesmyksStrings = new List<string>() { "||", "|L", "7|", "|F", "J|" };
+        var przesmykX = new List<int>();
         string[] text = File.ReadAllLines(@"../../../input.txt");
 
         var map = new List<string>();
 
         List<(int, int)> loopPos = new();
-        List<(int, int)> przesmykPos = new();
 
         foreach (string line in text)
         {
-            map.Add(line);
-            var przesmyksStrings = new List<string>() { "||", "|L", "7|", "|F", "J|" };
+            var przesmyksXForLine = new List<int>();
 
-            przesmyksStrings.ForEach(x =>
+            foreach (var przesmyk in przesmyksStrings)
             {
-                przesmykPos.AddRange(AllIndexesOf(line, x).Select(x => (x, map.Count)));
-            });
+                var idx = AllIndexesOf(line, przesmyk);
+                if (idx.Any())
+                    przesmyksXForLine.AddRange(idx);
+            }
+
+            przesmyksXForLine = przesmyksXForLine.OrderBy(x => x).ToList();
+
+            for (int i = 0; i < przesmyksXForLine.Count; i++)
+                przesmykX.Add(przesmyksXForLine[i] + i);
+
+            map.Add(line);
         }
+
+        przesmykX = przesmykX.Distinct().ToList();
 
         var map2 = new List<string>();
-        foreach (var przesmyk in przesmykPos.GroupBy(x => x.Item1))
+        foreach (string line in map)
         {
-            foreach (string line in map)
+            var newLine = line;
+
+            foreach (var x in przesmykX)
             {
-                var charToReplace = map[map2.Count][przesmyk.First().Item1 + 1] == '|' ? "." : "-";
-                map2.Add(line.Insert(przesmyk.First().Item1 + 1, charToReplace));
+                var charToInsert = "@";
+                if (newLine[x] == 'S' || newLine[x] == 'L' || newLine[x] == 'F')
+                    charToInsert = "-";
+                else if (newLine[x + 1] == 'S' || newLine[x + 1] == '7' || newLine[x + 1] == 'J')
+                    charToInsert = "-";
+                newLine = newLine.Insert(x + 1, charToInsert);
             }
-            map.Clear();
-            map.AddRange(map2);
-            map2.Clear();
+            map2.Add(newLine);
         }
+
+        PrintMap(map);
+        Console.WriteLine();
+        PrintMap(map2);
+
+        map = map2;
 
         var xPos = map.Single(x => x.Contains("S")).IndexOf("S");
         var yPos = map.IndexOf(map.Single(x => x.Contains("S")));
@@ -63,37 +82,40 @@ internal class Program
             loopPos.Add((xPos, yPos));
         }
 
-        //Console.WriteLine(steps / 2); // End of part1
+        Console.WriteLine(steps / 2); // End of part1
 
         var insideCounter = 0;
-        var przesmyksX = przesmykPos.Select(x => x.Item1).GroupBy(x => x).Select(x => x.First()).ToList();
 
         for (int y = 0; y < text.Length; y++)
         {
             for (int x = 0; x < text[y].Length; x++)
             {
-                if (IsInside(map, loopPos, przesmyksX, x, y))
+                if (IsInside(map, loopPos, x, y))
                 {
-                    Console.WriteLine($"{x} - {y}");
-                    insideCounter++;
+                    if (map[y][x] != '@')
+                    {
+                        Console.WriteLine($"{x} - {y}");
+                        insideCounter++;
+                    }
                 }
             }
         }
         Console.WriteLine(insideCounter);
     }
 
-    public static bool IsInside(List<string> map, List<(int, int)> loopPos, List<int> przesmyksX, int xPos, int yPos)
+    public static bool IsInside(List<string> map, List<(int, int)> loopPos, int xPos, int yPos)
     {
         int currXpos = xPos;
 
-        if (loopPos.Contains((xPos, yPos)) || przesmyksX.Any(x => x + 1 == xPos))
+        if (loopPos.Contains((xPos, yPos)))
             return false;
 
         int counterHorizontal = 0;
 
         while (currXpos >= 0)
         {
-            if (loopPos.Contains((currXpos, yPos)) && !(new char[] { '-' }.Contains(map[yPos][currXpos])))
+            if (loopPos.Contains((currXpos, yPos)) && map[yPos][currXpos] != '-' && 
+                ((currXpos > 1 && map[yPos].Substring(currXpos-2, 2) != "@L" && map[yPos].Substring(currXpos-2, 2) != "@|") || currXpos <= 1))
                 counterHorizontal++;
 
             currXpos--;
@@ -170,6 +192,11 @@ internal class Program
             yield return minIndex;
             minIndex = str.IndexOf(searchstring, minIndex + searchstring.Length);
         }
+    }
+
+    public static void PrintMap(List<string> map)
+    {
+        map.ForEach(x => Console.WriteLine(x));
     }
 }
 
