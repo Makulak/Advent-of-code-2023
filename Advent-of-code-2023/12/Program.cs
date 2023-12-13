@@ -1,6 +1,4 @@
-﻿using System.Text;
-using System;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 string[] text = File.ReadAllLines(@"../../../input.txt");
 
@@ -9,11 +7,13 @@ var total = 0;
 foreach (string line in text)
 {
     var record = line.Split(' ').First();
-    var numbers = line.Split(' ').Last().Split(",").Select(int.Parse).ToList();
+    record = $"{record}?{record}?{record}?{record}?{record}";
+    var oryginalNumbers = line.Split(' ').Last();
+    var numbers = $"{oryginalNumbers},{oryginalNumbers},{oryginalNumbers},{oryginalNumbers},{oryginalNumbers}".Split(",").Select(int.Parse).ToList();
 
     var unknownCount = record.Where(x => x == '?').Count();
 
-    List<string> allPossibilities = GeneratePermutations(line, numbers.Sum() - line.Where(x => x == '#').Count());
+    List<string> allPossibilities = GeneratePermutations(record, numbers.Sum() - record.Where(x => x == '#').Count());
 
     var result = allPossibilities.Where(x =>
     {
