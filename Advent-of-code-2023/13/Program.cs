@@ -18,19 +18,16 @@ Console.WriteLine(result);
 
 static int Calculate(List<string> pattern)
 {
-    try
-    {
-        var vert = GetHorizontalReflection(pattern);
-        if (vert != null)
-            return vert.Value * 100;
-        else
-            return GetVerticalReflection(pattern).Value;
-    }
-    catch(Exception ex)
-    {
-        return 0;
-    }
+    var vert = GetHorizontalReflection(pattern);
+    if (vert != null)
+        return vert.Value * 100;
+    else
+        return GetVerticalReflection(pattern).Value;
+
 }
+// 27300 too low
+// 44392 too high
+// 41179 too high
 
 static int? GetHorizontalReflection(List<string> pattern)
 {
@@ -48,10 +45,11 @@ static int? GetHorizontalReflection(List<string> pattern)
     {
         if (matchingIndexes[i].Any(x => matchingIndexes[i + 1].Contains(x - 1)))
             currentStrike++;
-        else if (currentStrike > longestStrike)
+        else if (currentStrike > longestStrike && (currentStrikeStartIdx == 0 || currentStrikeStartIdx + currentStrike + 1 == matchingIndexes.Count()))
         {
             longestStrike = currentStrike + 1;
             longestStrikeStartIdx = currentStrikeStartIdx;
+            currentStrikeStartIdx = i + 1;
         }
         else
         {
@@ -64,20 +62,17 @@ static int? GetHorizontalReflection(List<string> pattern)
     {
         longestStrike = currentStrike;
         longestStrikeStartIdx = currentStrikeStartIdx;
-
-        if (matchingIndexes[matchingIndexes.Count - 2].Any(x => matchingIndexes.Last().Contains(x - 1)))
-            longestStrike++;
     }
 
-    var endLongestStrikeIdx = longestStrike + longestStrikeStartIdx - 1;
+    var endLongestStrikeIdx = longestStrike + longestStrikeStartIdx;
 
     if (matchingIndexes.First().All(x => x == -100) && matchingIndexes.Last().All(x => x == -100))
         return null;
     if (longestStrike == matchingIndexes.Count())
         return longestStrike / 2 + longestStrikeStartIdx;
-    if (longestStrikeStartIdx == 0 && matchingIndexes.Skip(endLongestStrikeIdx + 1).All(x => x.All(y => y == -100 || y > endLongestStrikeIdx)))
-        return longestStrike / 2 + longestStrikeStartIdx;
-    if(longestStrikeStartIdx != 0 && matchingIndexes.Take(longestStrikeStartIdx).All(x => x.All(y => y == -100 || y <= longestStrikeStartIdx)))
+    if (longestStrikeStartIdx == 0)
+        return longestStrike / 2;
+    if (longestStrikeStartIdx != 0 && endLongestStrikeIdx + 1 == matchingIndexes.Count())
         return longestStrike / 2 + longestStrikeStartIdx;
 
     return null;
