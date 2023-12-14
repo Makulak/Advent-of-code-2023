@@ -30,57 +30,45 @@ static int Calculate(List<string> pattern)
 
 static int? GetHorizontalReflection(List<string> pattern)
 {
-    if (pattern.Count == 1)
-        return null;
+    List<int> previousIdxs = new();
+    bool found = false;
+    int? foundIdx = null;
 
-    var test = pattern.Select((x, i) => FindAllIndexof(pattern, x).Where(y => y != i).ToList()).ToList();
-    var matchingIndexes = pattern.Select((x, i) => FindAllIndexof(pattern, x).Where(y => y != i).ToList())
-            .Select(x => x.Count() == 0 ? new List<int> { -100 } : x)
-            .ToList();
-
-    var longestStrike = 0;
-    var longestStrikeStartIdx = 0;
-
-    var currentStrike = 0;
-    var currentStrikeStartIdx = 0;
-    for (int i = 0; i < matchingIndexes.Count; i++)
+    for (int i = 0; i < pattern.Count; i++)
     {
-        if (i > 0 && i == matchingIndexes.Count - 1)
+        var currentIdxs = FindAllIndexof(pattern, pattern[i]).Where(x => x != i);
+
+        if (i == 0 && !currentIdxs.Any())
         {
-            if (matchingIndexes[i-1].Any(x => matchingIndexes[i].Contains(x - 1)))
-            {
-                longestStrike = currentStrike + 1;
-                longestStrikeStartIdx = currentStrikeStartIdx;
-            }
+            found = false;
+            break;
         }
-        else if (matchingIndexes[i].Any(x => matchingIndexes[i + 1].Contains(x - 1)))
-            currentStrike++;
-        else if (currentStrike > longestStrike && currentStrikeStartIdx == 0)
+        else if (currentIdxs.Any(x => x == i - 1))
         {
-            longestStrike = currentStrike + 1;
-            longestStrikeStartIdx = currentStrikeStartIdx;
-            currentStrikeStartIdx = i + 1;
-            currentStrike = 0;
-        }
-        else
-        {
-            currentStrike = 0;
-            currentStrikeStartIdx = i + 1;
+            found = true;
+            foundIdx = i;
+            break;
         }
     }
 
-    var endLongestStrikeIdx = longestStrike + longestStrikeStartIdx;
+    for (int i = pattern.Count - 1; i >= 0; i--)
+    {
+        var currentIdxs = FindAllIndexof(pattern, pattern[i]).Where(x => x != i);
 
-    if (matchingIndexes.First().All(x => x == -100) && matchingIndexes.Last().All(x => x == -100))
-        return null;
-    if (longestStrike == matchingIndexes.Count())
-        return longestStrike / 2 + longestStrikeStartIdx;
-    if (longestStrikeStartIdx == 0)
-        return longestStrike / 2;
-    if (longestStrikeStartIdx != 0 && endLongestStrikeIdx == matchingIndexes.Count())
-        return longestStrike / 2 + longestStrikeStartIdx;
+        if (i == 0 && !currentIdxs.Any())
+        {
+            found = false;
+            break;
+        }
+        else if(currentIdxs.Any(x => x == i - 1))
+        {
+            found = true;
+            foundIdx = i;
+            break;
+        }
+    }
 
-    return null;
+    return foundIdx;
 }
 
 static int? GetVerticalReflection(List<string> pattern)
