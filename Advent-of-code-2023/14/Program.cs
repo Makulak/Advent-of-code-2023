@@ -106,8 +106,7 @@ static void DoCycles(List<string> text)
 {
     List<string> hashes = new();
 
-    var s = Stopwatch.StartNew();
-    for (int i = 0; i < 1000000000; i++)
+    for (int i = 0; i < 300; i++)
     {
         MoveToNorth(text);
         MoveToLeft(text);
@@ -116,14 +115,19 @@ static void DoCycles(List<string> text)
 
         var hash = ComputeHash(Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(text)));
 
-        if(hashes.Any(x => x == hash))
+        if (hashes.Any(x => x == hash))
         {
-            Console.WriteLine(hashes.Count());
+            var index = hashes.IndexOf(hash);
+            var count = hashes.Where(x => x == hash).ToList();
+
+            Console.Write($"i = {i} - matches: {index}"); // (1000000000% 143)+101 = 243, więc trzeba wziąć i=243
         }
+
+        var weight = CalculateWeight(text);
+        Console.WriteLine($" i = {i} - weight: {weight}");
         hashes.Add(hash);
     }
-    s.Stop();
-}
+}// 89819 too low
 
 static string ComputeHash(byte[] b)
 {
@@ -150,5 +154,5 @@ static void Print(List<string> text)
 Print(text);
 DoCycles(text);
 Print(text);
-var result = CalculateWeight(text);
-Console.WriteLine(result);
+var weight = CalculateWeight(text);
+Console.WriteLine(weight);
