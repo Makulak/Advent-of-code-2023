@@ -18,57 +18,47 @@ Console.WriteLine(result);
 
 static int Calculate(List<string> pattern)
 {
-    var vert = GetHorizontalReflection(pattern);
-    if (vert != null)
-        return vert.Value * 100;
-    else
-        return GetVerticalReflection(pattern).Value;
+    var horizontal = GetHorizontalReflection(pattern) ?? 0;
+    var vertical = GetVerticalReflection(pattern) ?? 0;
+
+    return horizontal * 100 + vertical;
 }
 // 27300 too low
 // 44392 too high
 // 41179 too high
 
-static int? GetHorizontalReflection(List<string> pattern)
+// 37859
+
+static int? GetHorizontalReflection(List<string> source, int prevMatch = -1)
 {
-    List<int> previousIdxs = new();
-    bool found = false;
-    int? foundIdx = null;
-
-    for (int i = 0; i < pattern.Count; i++)
+    static bool CheckMatch(string A, string B, bool doSmudgeCheck)
     {
-        var currentIdxs = FindAllIndexof(pattern, pattern[i]).Where(x => x != i);
+        int matches = Enumerable.Range(0, A.Length).Count(c => A[c] == B[c]);
+        if (matches == A.Length) return true;
+        if (doSmudgeCheck && matches == A.Length - 1) return true;
 
-        if (i == 0 && !currentIdxs.Any())
+        return false;
+    }
+
+    bool doCleaning = prevMatch != -1;
+
+    for (int y = 0; y < source.Count - 1; y++)
+    {
+        if (CheckMatch(source[y], source[y + 1], doCleaning))
         {
-            found = false;
-            break;
-        }
-        else if (currentIdxs.Any(x => x == i - 1))
-        {
-            found = true;
-            foundIdx = i;
-            break;
+            if (doCleaning && prevMatch == y + 1) continue; // skip prev seen.
+
+            bool isMatch = true;
+            int numToEdge = int.Min(y, source.Count - (y + 2));
+            for (int j = 1; j <= numToEdge; j++)
+            {
+                isMatch = CheckMatch(source[y - j], source[y + j + 1], doCleaning);
+            }
+            if (isMatch) return y + 1;
         }
     }
 
-    for (int i = pattern.Count - 1; i >= 0; i--)
-    {
-        var currentIdxs = FindAllIndexof(pattern, pattern[i]).Where(x => x != i);
-
-        if (i == 0 && !currentIdxs.Any())
-        {
-            found = false;
-            break;
-        }
-        else if(currentIdxs.Any(x => x == i - 1))
-        {
-            found = true;
-            foundIdx = i;
-            break;
-        }
-    }
-
-    return foundIdx;
+    return null;
 }
 
 static int? GetVerticalReflection(List<string> pattern)
@@ -79,11 +69,3 @@ static int? GetVerticalReflection(List<string> pattern)
 
     return GetHorizontalReflection(columns);
 }
-
-static List<int> FindAllIndexof<T>(IEnumerable<T> values, T val)
-{
-    var x = values.Select((b, i) => object.Equals(b, val) ? i : -1).Where(i => i != -1).ToList();
-
-    return x;
-}
-
