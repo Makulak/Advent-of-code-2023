@@ -5,7 +5,9 @@
         string[] text = File.ReadAllLines(@"../../../input.txt");
 
         var contrapation = new Contrapation(text);
-        Console.WriteLine(contrapation.Start());
+        Console.WriteLine(contrapation.StartPartOne());
+        Console.ReadLine();
+        Console.WriteLine(contrapation.StartPartTwo());
     }
 }
 
@@ -26,7 +28,7 @@ public class Beam
     {
         return $"{X}, {Y}; Direction: {Direction}";
     }
-}
+}// 8056 too low
 
 public class Contrapation
 {
@@ -40,15 +42,125 @@ public class Contrapation
     {
         visitedTiles = new();
         Area = area;
+        Beams = new();
+    }
 
-        var direction = Direction.Right;
+    public int StartPartTwo()
+    {
+        int max = -1;
+        for (int x = 0; x < Area.First().Length; x++)
+        {
+            // Top
+            visitedTiles.Clear();
+            Beams.Clear();
 
-        if (Area[0][0] == '\\' || Area[0][0] == '|')
-            direction = Direction.Down;
-        else if (Area[0][0] == '/')
-            direction = Direction.Up;
+            SetStartPos(Direction.Down, x, 0);
+            var resultTop = Start();
+            if (resultTop > max)
+                max = resultTop;
 
-        Beams = [new Beam(0, 0, direction)];
+            // Bottom
+            visitedTiles.Clear();
+            Beams.Clear();
+
+            SetStartPos(Direction.Up, x, Area.Length - 1);
+            var resultBottom = Start();
+            if (resultBottom > max)
+                max = resultBottom;
+
+            Console.WriteLine($"x: {x}");
+        }
+
+        for (int y = 0; y < Area.Length; y++)
+        {
+            // Left
+            visitedTiles.Clear();
+            Beams.Clear();
+
+            SetStartPos(Direction.Right, 0, y);
+            var resultLeft = Start();
+            if (resultLeft > max)
+                max = resultLeft;
+
+            // Right
+            visitedTiles.Clear();
+            Beams.Clear();
+
+            SetStartPos(Direction.Left, Area.First().Length - 1, y);
+            var resultRight = Start();
+            if (resultRight > max)
+                max = resultRight;
+
+            Console.WriteLine($"y: {y}");
+        }
+
+        return max;
+    }
+
+    private void SetStartPos(Direction direction, int x, int y)
+    {
+        if (direction == Direction.Down)
+        {
+            if (Area[y][x] == '\\')
+                Beams.Add(new Beam(x, y, Direction.Right));
+            else if (Area[y][x] == '/')
+                Beams.Add(new Beam(x, y, Direction.Left));
+            else if (Area[y][x] == '-')
+            {
+                Beams.Add(new Beam(x, y, Direction.Right));
+                Beams.Add(new Beam(x, y, Direction.Left));
+            }
+            else
+                Beams.Add(new Beam(x, y, direction));
+        }
+        else if (direction == Direction.Up)
+        {
+            if (Area[y][x] == '\\')
+                Beams.Add(new Beam(x, y, Direction.Left));
+            else if (Area[y][x] == '/')
+                Beams.Add(new Beam(x, y, Direction.Right));
+            else if (Area[y][x] == '-')
+            {
+                Beams.Add(new Beam(x, y, Direction.Right));
+                Beams.Add(new Beam(x, y, Direction.Left));
+            }
+            else
+                Beams.Add(new Beam(x, y, direction));
+        }
+        else if (direction == Direction.Right)
+        {
+            if (Area[y][x] == '\\')
+                Beams.Add(new Beam(x, y, Direction.Down));
+            else if (Area[y][x] == '/')
+                Beams.Add(new Beam(x, y, Direction.Up));
+            else if (Area[y][x] == '|')
+            {
+                Beams.Add(new Beam(x, y, Direction.Down));
+                Beams.Add(new Beam(x, y, Direction.Up));
+            }
+            else
+                Beams.Add(new Beam(x, y, direction));
+        }
+        else if (direction == Direction.Left)
+        {
+            if (Area[y][x] == '\\')
+                Beams.Add(new Beam(x, y, Direction.Up));
+            else if (Area[y][x] == '/')
+                Beams.Add(new Beam(x, y, Direction.Down));
+            else if (Area[y][x] == '|')
+            {
+                Beams.Add(new Beam(x, y, Direction.Down));
+                Beams.Add(new Beam(x, y, Direction.Up));
+            }
+            else
+                Beams.Add(new Beam(x, y, direction));
+        }
+    }
+
+    public int StartPartOne()
+    {
+        SetStartPos(Direction.Down, 0, 0);
+        return Start();
     }
 
     public int Start()
@@ -60,16 +172,16 @@ public class Contrapation
 
             loopIterator++;
 
-            Console.Clear();
-            Print();
-            Console.WriteLine(visitedTiles.Select(x => x.Split(";").First()).Distinct().Count());
-            Console.WriteLine(loopIterator);
-            Console.ReadLine();
+            //Console.Clear();
+            //Print();
+            //Console.WriteLine(visitedTiles.Select(x => x.Split(";").First()).Distinct().Count());
+            //Console.WriteLine(loopIterator);
+            //Console.ReadLine();
         }
 
         return visitedTiles.Select(x => x.Split(";").First()).Distinct().Count();
     }
-    // 7736 - too high
+
     public void MakeMove()
     {
         var newBeams = new List<Beam>();
